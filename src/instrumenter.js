@@ -54,8 +54,16 @@ export class Instrumenter extends istanbul.Instrumenter {
      * Set the options for the Traceur transpiler.
      */
     _setTraceurOptions() {
-        traceur.options.modules = 'amd';
-        traceur.options.experimental = true;
+        let traceurOptions = Object.assign(
+          // default traceurOptions
+          {
+              modules: 'amd',
+              experimental: true
+          },
+          this.opts.traceur && this.opts.traceur.options || {}
+        );
+
+        Object.assign(traceur.options, traceurOptions);
     }
 
     /**

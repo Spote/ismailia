@@ -24,13 +24,32 @@ To use ismailia, set the [instrumenter](https://github.com/karma-runner/karma-co
 
 ```js
 coverageReporter: {
-	instrumenter: {
-		'**/*.js': 'ismailia'
-	}
+  instrumenter: {
+    '**/*.js': 'ismailia'
+  }
 }
 ```
 
-The scripts are compiled as [RequiredJS](http://requirejs.org/) modules. See the [example](https://github.com/Spote/ismailia/blob/master/example) directory for an example on how to setup tests. The example utilises the [karma-traceur-preprocessor](https://github.com/karma-runner/karma-traceur-preprocessor) to compile the tests.
+The scripts are compiled as [RequiredJS](http://requirejs.org/) modules by default. See the [example](https://github.com/Spote/ismailia/blob/master/example) directory for an example on how to setup tests. The example utilises the [karma-traceur-preprocessor](https://github.com/karma-runner/karma-traceur-preprocessor) to compile the tests.
+
+But can customize the traceur options
+
+```js
+coverageReporter: {
+  instrumenter: {
+    '**/*.js': 'ismailia'
+  },
+  instrumenterOptions: {
+    ismailia: {
+      traceur: {
+        options: {
+          modules: 'instantiate'
+        }
+      }
+    }
+  }
+}
+```
 
 ## License
 
