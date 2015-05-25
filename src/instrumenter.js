@@ -51,14 +51,6 @@ export class Instrumenter extends istanbul.Instrumenter {
     }
 
     /**
-     * Set the options for the Traceur transpiler.
-     */
-    _setTraceurOptions() {
-        traceur.options.modules = 'amd';
-        traceur.options.experimental = true;
-    }
-
-    /**
      * Create a soruce map consumer for the specified source map.
      * @param  {String|Object} sourceMap The source map as either a JSON string
      *  or object.
@@ -80,32 +72,24 @@ export class Instrumenter extends istanbul.Instrumenter {
      * @return {Object} The compiled code and source map.
      */
     _compile(code, fileName) {
-        // parse the source code and create an ES6 tree
-        var sourceFile = new SourceFile(fileName, code);
-        var parser = new Parser(sourceFile);
-        var harmonyTree = parser.parseModule();
+        var sourceMap = '',
+            compiler, result
+        ;
 
-        // transform the ES6 tree into a Mozilla Parser AST compatible tree
-        var reporter = new ErrorReporter();
-        var transformer = new FromOptionsTransformer(reporter);
-        var tree = transformer.transform(harmonyTree);
-        
-        // throw an exception if there was an error parsing the tree
-        if (reporter.hadError()) {
-            throw new Error('Error transforming');
+        compiler = new traceur.NodeCompiler({
+            modules: 'amd',
+            sourceMaps: true
+        });
+
+        try {
+            result = compiler.compile(code, fileName, fileName, '.');
+            sourceMap = compiler.getSourceMap();
+        } catch (e) {
+            throw new Error(e);
         }
 
-        // generate the source map
-        var sourceMapGenerator = new SourceMapGenerator({ file: fileName });
-        var writer = new ParseTreeMapWriter(sourceMapGenerator, {});
-        writer.visitAny(tree);
-
-        // retrieve the compiled code and source map
-        var compiled = writer.toString(tree);
-        var sourceMap = sourceMapGenerator.toString();
-
         return {
-            code: compiled,
+            code: result,
             map: sourceMap
         };
     }
@@ -131,38 +115,14 @@ export class Instrumenter extends istanbul.Instrumenter {
         return program;
     }
 
-    /**
-     * Generate code from the specified program object.
-     * @param  {Object} program The Esprima program object to compile into code.
-     * @param  {String} code The code used to create the Esprima program object.
-     * @param  {String} fileName The name of the original file.
-     * @return {String} The generated code.
-     */
-    _generate(program, code, fileName) {
-        var options = this.opts.codeGenerationOptions || {};
-        options.sourceMap = fileName;
-        options.sourceMapWithCode = true;
-        options.sourceContent = code;
-        options.comment = this.opts.preserveComments;
-
-        return escodegen.generate(program, options);
-    }
-
     instrumentSync(code, fileName) {
-        this._setTraceurOptions();
-
         // compile the code with Traceur and create the source map
         var compiled = this._compile(code, fileName);
-        this._traceurMap = this._createSourceMapConsumer(compiled.map);
 
-        // parse the compiled code using Esprima and generate the source code
-        // to use the source map as a link between the original code and the
-        // code Istanbul will generate
+        // parse the compiled code using Esprima
         var program = this._parse(compiled.code);
-        var generator = this._generate(program, compiled.code, fileName).map;
-        generator.applySourceMap(this._traceurMap);
-
-        this._sourceMap = this._createSourceMapConsumer(generator.toString());
+        
+        this._sourceMap = this._createSourceMapConsumer(compiled.map);
 
         return this.instrumentASTSync(program, fileName, code);
     }
@@ -184,10 +144,10 @@ export class Instrumenter extends istanbul.Instrumenter {
      * @param {Object} location The map location
      */
     _checkLocation(location) {
-        var filePath = path.resolve(location.start.source);
+        var filePath = location.start.source && path.resolve(location.start.source);
 
         // determine whether the original file for the location exists
-        if (!existsSync(filePath)) {
+        if (filePath && !existsSync(filePath) || location.start.line === null) {
             // change the location to nothing to prevent the issues from
             // appearing (despite them being greyed out anyway)
             location.start = { line: 0, column: 0 };

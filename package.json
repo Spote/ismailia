@@ -38,17 +38,17 @@
     "esprima": "^1.2.2",
     "istanbul": "^0.3.0",
     "source-map": "^0.1.38",
-    "traceur": "0.0.58"
+    "traceur": "~0.0.72"
   },
   "devDependencies": {
     "gulp": "^3.8.7",
     "gulp-plumber": "^0.6.5",
     "gulp-rimraf": "^0.1.0",
-    "gulp-traceur": "^0.13.0",
+    "gulp-traceur": "~0.14.0",
     "gulp-watch": "^0.7.0",
     "karma": "^0.12.23",
     "karma-chrome-launcher": "^0.1.4",
-    "karma-coverage": "git://github.com/Spote/karma-coverage",
+    "karma-coverage": "git://github.com/jlowcs/karma-coverage",
     "karma-firefox-launcher": "^0.1.3",
     "karma-jasmine": "^0.1.5",
     "karma-requirejs": "^0.2.2",
